@@ -418,8 +418,7 @@ def preprocess_images(img0, img1, args):
 
 def output_file( corres, outfile ):
     for x1, y1, x2, y2, score, index in corres:
-      outfile.write("%d %d %d %d %g %d\n" % (x1, y1, x2, y2) )
-      # outfile.write("%d %d %d %d %g %d\n" % (x1, y1, x2, y2, score, index) )  ## origin
+      outfile.write("%d %d %d %d %g %d\n" % (x1, y1, x2, y2, score, index) )
 
 
 
