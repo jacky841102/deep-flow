@@ -1,0 +1,125 @@
+DeepFlow, v2.0
+
+Our code is mentioned only for scientific or personal use.
+Please contact us for commercial use.
+
+DeepFlow2 is an improvement of DeepFlow that takes benefit of SSE instructions to speed up the computation and that incorporates a non-local weight for the smoothness term.
+
+### Compiling ###
+
+Simply type 'make' and the code must compile.
+The program was only tested under a 64-bit Linux distribution.
+A static version is also provided in case of the compilation failure.
+We do not give any support for other OS or compilation issues.
+
+Dependencies:	(my own on ubuntu 14.04)
+	LIBAFLAGS=-static /usr/lib/x86_64-linux-gnu/libjpeg.a /usr/lib/x86_64-linux-gnu/libpng.a /usr/lib/x86_64-linux-gnu/libz.a /usr/lib/x86_64-linux-gnu/libm.a
+
+### Using DeepFlow2 ###
+
+The general command to use DeepFlow2 is:
+./deepflow2 <im1> <im2> <filename.flo> [options]
+
+	e.g:
+		./deepflow2 sintel1.png sintel2.png sintel.flo
+		./deepflow2 mude1.jpg mude2.jpg mude.flo
+
+For a list of the available options, you can type: 
+		./deepflow2 -h
+>>>
+	-h, --help                                               print this message
+	-a, -alpha              <float>(12.0)                    weight of smoothness terms
+	-b, -beta               <float>(300.0)                   weight of descriptor matching
+	-g, -gamma              <float>(3.0)                     weight of gradient constancy assumption
+	-d, -delta              <float>(2.0)                     weight of color constancy assumption
+	-s, -sigma              <float>(0.8)                     standard deviation of Gaussian presmoothing kernel
+	-e, -eta                <float>(0.95)                    ratio factor for coarse-to-fine scheme
+	-minsize                <interger>(25)                   size of the coarsest level
+	-inner                  <integer>(5)                     number of inner fixed point iterations
+	-iter                   <integer>(25)                    number of iterations for the solver
+	-soromega               <float>(1.6)                     omega parameter of the sor method
+	-bk                     <float>(0.0)                     use decreasing beta i.e. beta(k) = beta*( k / kmax )^betak, if 0, a last iteration is done with beta=0
+
+	-match                                                   '-match filename' reads matches from a file and '-match' from stdin. Each line is the match with the first four numbers being x1 y1 x2 y2.
+
+	-sintel                                                  set the parameters to the one used in the arXiv paper for MPI-Sintel dataset
+	-middlebury                                              set the parameters to the one used in the arXiv paper for middlebury dataset
+	-kitti                                                   set the parameters to the one used in the arXiv paper for KITTI dataset
+
+The option -match allows to give input matches, either from an input file or from stdin.
+In particular, results from the paper use the results from DeepMatching.
+
+### Example including DeepMatching ###
+
+To compute DeepFlow2 including the DeepMatching, you need to download the Deep Matching code on the dedicated webpage: http://lear.inrialpes.fr/src/deepmatching/.
+The matches output by DeepMatching can directly be piped to DeepFlow2 like in the following example:
+
+<deepmatching_path>/deepmatching sintel1.png sintel2.png | ./deepflow2 sintel1.png sintel2.png sintel.flo -match -sintel
+(for small size images, you can add the option "-downscale 0" when extracting deepmatching for a better accuracy)
+
+It creates a .flo file in a standard format. 
+For instance, code for reading and displaying such format is available with the Middlebury dataset.
+
+### Warning: without matching ###
+
+If you don't use any input match (i.e. you don't specify any -match argument), the method will be limited to a standard variational method without matching integration and thus will lose accuracy, specially for large displacements. This is the case in the opencv implementation.
+
+### Bugs and extensions ###
+
+If you find bugs, etc., please feel free to contact me.
+Contact details are available on my webpage.
+http://lear.inrialpes.fr/people/pweinzae
+
+### History ###
+
+December 2013  v1.0.0
+March 2014     v1.0.1: memory leak fix + support for png images
+March 2014     FastDeepFlow_v1.0.1: faster (~2x) version using SSE instructions. Results are slightly different due to floating point approximations.
+September 2015 v2.0: incorporation of a local smoothness weight and of the computation of matches' weights
+
+### Matlab wrapper ###
+
+To compile the wrapper, first compile the code using make, then open matlab and compile the mex-file:
+>> mex deepflow2_matlab.cpp image.o io.o opticalflow.o opticalflow_aux.o solver.o -ljpeg -lpng -lm -output deepflow2
+The wrapper has been tested on Matlab14b under Linux-64 bit. We do not provide any support for compilation issue.
+
+Usage with DeepMatching (assuming that DeepMatching has been added to the path with the matlab wrapper compiled; note that matlab must be opened with atlas preloaded for DeepMatching computation: LD_PRELOAD=/usr/lib64/atlas/libtatlas.so.3 matlab):
+>> im1 = single(imread('sintel1.png'));
+>> im2 = single(imread('sintel2.png'));
+>> matches = deepmatching(im1, im2);
+>> flow = deepflow2(im1, im2, matches, '-sintel');
+Calling deepflow2() will show the list of available options.
+
+### Python wrapper ###
+
+The python wrapper requires numpy (and swig if you modify the code and recompile it). To compile it, 
+type 'make python'. The wrapper has been tested under Linux-64 bit only. We do not provide any support for compilation issue.
+	make sure you have installed swig -> "sudo apt-get install swig"
+
+Usage with DeepMatching (assuming that DeepMatching has been added to the pythonpath with the python wrapper compiled):
+>> from deepmatching import deepmatching
+>> from deepflow2 import deepflow2
+>> import numpy
+>> from PIL import Image
+>> im1 = numpy.array(Image.open('sintel1.png'))
+>> im2 = numpy.array(Image.open('sintel2.png'))
+>> matches = deepmatching(im1, im2)
+>> flow = deepflow2(im1, im2, matches, '-sintel')
+Callind deepflow2() will show the list of available options.
+
+### LICENCE CONDITIONS ###
+
+Copyright (C) 2013 Philippe Weinzaepfel
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
