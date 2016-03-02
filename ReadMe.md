@@ -27,8 +27,8 @@ pipeline:
 The program was only tested under a 64-bit Linux distribution (Ubuntu 14.04).
 
 ### Example ###
-	`cd optical_flow`
-  `sh flow_pipeline.sh`
+	cd optical_flow
+  sh flow_pipeline.sh
 
 or see `cmd.example` for more examples
 
