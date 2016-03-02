@@ -59,6 +59,11 @@ Installation:
   Set your environment variables:
     LD_LIBRARY_PATH should point to your libcaffe directory, to mkl, etc. 
     (basically to all the paths you edited in the Makefile)
+    >>>
+      vim ~/.bashrc
+      add "export LD_LIBRARY_PATH=/home/ddk/dongdk/deep-matching/deep_matching/caffe/.build_release/lib:/usr/local/cuda-7.0/lib64/:$LD_LIBRARY_PATH" and save
+      source ~/.bashrc
+
   
   Try executing the following command:
   >>> python deep_matching_gpu.py liberty1.png liberty2.png -v -viz corres
