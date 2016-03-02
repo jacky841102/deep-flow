@@ -1,0 +1,15 @@
+# demo 0
+cd /path/to/web_gpudm_1
+python deep_matching_gpu.py demo1.jpg demo2.jpg -GPU -v --downscale 1 --ngh_rad 256 --use_sparse |cat 
+python deep_matching_gpu.py demo1.jpg demo2.jpg -GPU -v --downscale 1 --ngh_rad 256 --use_sparse -out demo1.txt 
+
+# demo 1
+cd /path/to/DeepFlow_release2.0
+
+no match:
+	./deepflow2 demo1.jpg demo2.jpg demo.flo
+
+with match:
+	python ../deep_matching/deep_matching_gpu.py demo1.jpg demo2.jpg -GPU -v --downscale 1 --ngh_rad 256 --use_sparse |cat | ./deepflow2 demo1.jpg demo2.jpg demo.flo
+	python ../deep_matching/deep_matching_gpu.py demo1.jpg demo2.jpg -GPU -v --downscale 1 --ngh_rad 256 --use_sparse |cat | \
+			./deepflow2 demo1.jpg demo2.jpg demo.flo -match

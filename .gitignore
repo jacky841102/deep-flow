@@ -95,7 +95,4 @@ CURRENT
 MANIFEST-*
 
 # images
-*.jpg
-*.png
-*.flo
 images/
