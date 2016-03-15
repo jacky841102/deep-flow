@@ -552,7 +552,9 @@ image_t** parse_options(optical_flow_params_t* params, int argc, char **argv, co
 		            exit(1);
 		        }
 	        }
+            printf("\nusing match flag\n\n");
 	        float x1, x2, y1, y2;
+            int flag = 0;
 	        while(!feof(fid) && fscanf(fid, "%f %f %f %f%*[^\n]", &x1, &y1, &x2, &y2)==4){
 	            if( x1<0 || y1<0 || x2<0 || y2<0 || x1>=width || y1>=height || x2>=width || y2>=height){
 		            fprintf(stderr, "Warning: match out of bound: %f %f -> %f %f\n", x1, y1, x2, y2);
@@ -565,6 +567,10 @@ image_t** parse_options(optical_flow_params_t* params, int argc, char **argv, co
 	            match_x->data[ pos ] = x2-x1;
 	            match_y->data[ pos ] = y2-y1;
 	            match_z->data[ pos ] = 1.0f; // will be computed later
+                if(flag < 3) {
+                    printf("%f %f %f %f\n", x1, y1, x2, y2);
+                    flag++;
+                }
 	        }
 	        matches[0] = match_x;
 	        matches[1] = match_y;

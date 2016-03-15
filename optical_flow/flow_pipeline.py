@@ -31,6 +31,7 @@ def _parse_args():
   parser.add_argument('--cf_options', dest='cf_options', help='params options of color flow',    default=None, type=str)
   parser.add_argument('--frame_n',    dest='frame_n', 	 help='second frame',  default=-2, type=int)
   parser.add_argument('--rm_flo',     dest='rm_flo',     help='remove flo files, if need',  default=0, type=int)
+  parser.add_argument('--rm_mth',     dest='rm_mth',     help='remove match files, if need',  default=0, type=int)
   parser.add_argument('--is_disp',    dest='is_disp',    help='show info',  default=0, type=int)
   parser.add_argument('--sleep_time', dest='sleep_time', help='sleep time', default=3, type=int)
 
@@ -160,6 +161,7 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 	''''''
 	t_time     = time.time()
 	im_n       = len(im_pairs)
+	mth_paths  = []
 	flo_paths  = []
 	
 	for im_i in xrange(im_n):
@@ -172,23 +174,35 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 		
 		im_name2 = os.path.splitext(im_name)[0]
 		im_path2 = im_pair[1]
+
+		print "main im_path:", im_path1
+		print "auxi im_path:", im_path2
 		
+		mth_path = out_dire + im_name2 + "_match.txt"
+		mth_paths.append(mth_path)
+
 		of_path  = out_dire + im_name2 + ".png"
 		
 		flo_path = out_dire + im_name2 + ".flo"
 		flo_paths.append(flo_path)
 
-		dm_cmd   = "python %s %s %s %s" % (dm_file, im_path1, im_path2, dm_options)
-		df_cmd   = "%s %s %s %s %s" % (df_file, im_path1, im_path2, flo_path, df_options)
+		dm_cmd   = "python %s %s %s %s -out %s" % (dm_file, im_path1, \
+										im_path2, dm_options, mth_path)
+		df_cmd   = "%s %s %s %s %s -match %s" % (df_file, im_path1, im_path2, \
+										flo_path, df_options, mth_path)
 		cf_cmd   = "%s %s %s" % (cf_file, flo_path, of_path)
 
 		# optical flow images
 		if not os.path.exists(of_path) or not os.path.isfile(of_path):
-			# flo files
-			if not os.path.exists(flo_path) or not os.path.isfile(flo_path):
-				cmd = "%s |cat | %s" % (dm_cmd, df_cmd)
+			# flo files and match file
+			if not os.path.exists(flo_path) or not os.path.isfile(flo_path) or \
+				 not os.path.exists(mth_path) or not os.path.isfile(mth_path):
+				cmd = dm_cmd
 				os.system(cmd)
 			
+			cmd = df_cmd
+			os.system(cmd)
+
 			if os.path.exists(flo_path) and os.path.isfile(flo_path):
 				cmd = cf_cmd
 				os.system(cmd)
@@ -202,6 +216,11 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 		for flo_path in flo_paths:
 			if os.path.exists(flo_path) and os.path.isfile(flo_path):
 			  os.remove(flo_path)
+
+	if args.rm_mth != 0:
+		for mth_path in mth_paths:
+			if os.path.exists(mth_path) and os.path.isfile(mth_path):
+			  os.remove(mth_path) 
 
 	t_time = time.time() - t_time
 	print "\n---- Takes %s seconds for %s images -- (average time: %s)----\n" % (t_time, im_n, t_time / im_n)
@@ -222,8 +241,12 @@ def flow_pipeline():
 	im_first_paths 		= _im_paths(im_first_path, is_disp)
 
 	if args.im_second_path is None:
+		print "\nPair from sequence\n"
+		time.sleep(args.sleep_time)
 		im_pairs 			  = _im_pairs_v1(im_first_paths, frame_n, is_disp)
 	else:
+		print "\nPair from directory\n"
+		time.sleep(args.sleep_time)
 		im_second_path  = args.im_second_path.strip()
 		im_second_paths = _im_paths(im_second_path, is_disp)
 		im_pairs        = _im_pairs_v2(im_first_paths, im_second_paths, is_disp)

@@ -418,6 +418,7 @@ def parse_args():
   parser.add_argument("--crop", type=int, nargs=2, 
       help="[Pre-processing] crop the images to a given shape", metavar=('W','H')) 
   
+  parser.add_argument("-form_type", "--form_type", default=0, type=int)
   parser.add_argument("-out","--output", type=argparse.FileType('w'), default=sys.stdout, 
       help="Output the matching to a text file") 
   
@@ -454,7 +455,8 @@ if __name__=='__main__':
   # launch matching
   corres = match_images((img0, img1), params, GPU=args.GPU, viz=viz)[0]
   
-  helper.output_file(corres, args.output)
+  form_type = True if args.form_type == 0 else False
+  helper.output_file(corres, args.output, form_type)
 
 
 '''

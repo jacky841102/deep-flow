@@ -416,10 +416,16 @@ def preprocess_images(img0, img1, args):
   return img0, img1
 
 
-def output_file( corres, outfile ):
+def output_file( corres, outfile, form_type=True):
+  from signal import signal, SIGPIPE, SIG_DFL
+  if form_type:
     for x1, y1, x2, y2, score, index in corres:
-      outfile.write("%d %d %d %d %g %d\n" % (x1, y1, x2, y2, score, index) )
-
+      outfile.write("%d %d %d %d %g %d\n" % (x1, y1, x2, y2, score, index))
+  else:
+    for x1, y1, x2, y2, score, index in corres:
+      outfile.write("%d %d %d %d\n" % (x1, y1, x2, y2))
+  # outfile.flush()
+  # outfile.close()
 
 
 
