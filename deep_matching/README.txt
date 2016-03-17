@@ -154,6 +154,10 @@ Important tip:
     * incrementing the "--downscale" parameter (i.e. to downscale images before matching). 
     * You can also investigate the memory usage with '-viz mem', but keep in mind that
       it under-estimates the actual memory usage.
+    * if your image pair is very large, please use `ds`, or you will see 
+        `F0316 10:10:52.342209 24363 blob.cpp:33] Check failed: shape[i] <= 2147483647 / count_ (513 vs. 242) blob size exceeds INT_MAX*** Check failure stack trace: ***`
+      and, for now it's not fixed.
+
 
 
 Versions of the different modules:
