@@ -190,9 +190,11 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 	flo_paths  = []
 	
 	im_disp		 = True if args.im_disp != 0 else False
-
-	run_dm		 = True if args.run_dm == 0  else False
-	print "run_dm:", run_dm, "im_disp:", im_disp
+	run_dm		 = True if args.run_dm  == 0 else False
+	rm_flo		 = True if args.rm_flo  != 0 else False
+	rm_mth		 = True if args.rm_mth  != 0 else False
+	print "run_dm:", run_dm, "im_disp:", im_disp, \
+				"rm_flo:", rm_flo, "rm_mth:",  rm_mth
 
 	for im_i in xrange(im_n):
 		s_time   = time.time()
@@ -253,6 +255,14 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 		else:
 			pass
 
+		# remove flo file
+		if rm_flo and os.path.exists(flo_path) and os.path.isfile(flo_path):
+			os.remove(flo_path)
+
+		# remove match file
+		if rm_mth and os.path.exists(mth_path) and os.path.isfile(mth_path):
+			os.remove(mth_path) 
+
 		if im_disp:
 			im1 = cv2.imread(im_path1)
 			im2 = cv2.imread(im_path2)
@@ -269,15 +279,15 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 		
 		print "\n---- Takes %s seconds for %s-th image: %s----\n" % (time.time() - s_time, im_i, im_path1)
 
-	if args.rm_flo != 0:
-		for flo_path in flo_paths:
-			if os.path.exists(flo_path) and os.path.isfile(flo_path):
-			  os.remove(flo_path)
+	# if rm_flo:
+	# 	for flo_path in flo_paths:
+	# 		if os.path.exists(flo_path) and os.path.isfile(flo_path):
+	# 		  os.remove(flo_path)
 
-	if args.rm_mth != 0:
-		for mth_path in mth_paths:
-			if os.path.exists(mth_path) and os.path.isfile(mth_path):
-			  os.remove(mth_path) 
+	# if rm_mth:
+	# 	for mth_path in mth_paths:
+	# 		if os.path.exists(mth_path) and os.path.isfile(mth_path):
+	# 		  os.remove(mth_path) 
 
 	t_time = time.time() - t_time
 	print "\n---- Takes %s seconds for %s images -- (average time: %s)----\n" % (t_time, im_n, t_time / im_n)
