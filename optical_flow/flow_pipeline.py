@@ -16,6 +16,8 @@ import argparse
 import numpy as np
 from math import *
 
+disp_n = 2000
+
 def _parse_args():
   """
   Parse input arguments
@@ -84,9 +86,32 @@ def _parse_args():
 
   return args
 
-def create_dire(path):
+def _create_dire(path):
   if not os.path.isdir(path):
     os.makedirs(path)
+
+def _get_test_data(im_path, im_ext=".jpg"):
+	'''form (per line): `in_dire imgidx`'''
+	print "\n\nGetting im_paths and imgidxs from `%s`.\n\n" % (im_path,)
+	imgidxs  = []
+	im_paths = []
+	fh 			 = open(im_path)
+	for line in fh.readlines():
+		line = line.strip()
+		info = line.split()
+
+		n_info = len(info)
+		assert n_info == 2
+
+		in_dire = info[0].strip()
+		imgidx  = info[1].strip()
+		imgidxs.append(imgidx)
+		im_path = in_dire + imgidx + im_ext
+		im_paths.append(im_path)
+	fh.close()
+	print "\n\nGetting im_paths and imgidxs done.\n\n"
+
+	return im_paths, imgidxs
 
 def _im_paths(im_path, is_disp=False):
 	im_path = im_path.strip()
@@ -94,60 +119,83 @@ def _im_paths(im_path, is_disp=False):
 	  if im_path.endswith(".jpg") or im_path.endswith(".png") \
 	      or im_path.endswith(".jpeg"): # # just an image (with other image extension?)
 	    im_paths = [im_path]
-	  else: # read from label file: contain im_path [label ...]
-	    im_paths, _ = _get_test_data(im_path)
+	    imgidxs  = [os.path.basename(im_path).rsplit(".", 1)[0]]
+	  else: # read from label file: contain im_dire imgidx
+	    im_paths, imgidxs = _get_test_data(im_path)
 	elif os.path.isdir(im_path):  # read from image directory
 	  im_names = os.listdir(im_path)
 	  assert len(im_names) >= 1
-	  im_names.sort() # sort it for some convinience
-	  im_paths = [im_path + im_name.strip() for im_name in im_names]
+	  im_names = [im_name.strip() for im_name in im_names]
+	  im_names.sort() # sort it for some convinience\
+	  imgidxs  = [im_name.rsplit(".")[0] for im_name in im_names]
+	  im_paths = [im_path + im_name      for im_name in im_names]
 	else:
 	  raise IOError(('\n\n{:s} not exist.\n\n').format(im_path))
 
 	im_n = len(im_paths)
 	assert im_n >= 1, "invalid input of `im_path`: " % (im_path,)
-
+	assert im_n == len(imgidxs), "im_n: %s, len(imgidxs): %s" % \
+																(im_n, len(imgidxs))
 	if is_disp:
 		print "\n\n"
 		print "---- Images ----"
 		print "im_path:", im_path, "\n"
-		for  im_path in im_paths:
-			print im_path
+		for j in xrange(im_n):
+			imgidx  = imgidxs[j]
+			im_path = im_paths[j]
+			print imgidx, "->", im_path
 		print "\n\n"
 
-	return im_paths
+	return im_paths, imgidxs
 
-def _im_pairs_v1(im_paths, frame_n, is_disp=False):
+def _im_pairs_v1(im_paths, frame_n, imgidxs1=None, is_disp=False):
+	imgidxs2 = []
 	im_pairs = []
 	im_n 		 = len(im_paths)
 
 	assert frame_n != 0
 	assert im_n    >= 1 + abs(frame_n)
 
-	if frame_n < 0:
-		for idx in xrange(abs(frame_n)):
-			if idx + abs(frame_n) >= im_n:
-				continue
-			im_pairs.append((im_paths[idx], im_paths[idx + abs(frame_n)]))
-		for idx in xrange(abs(frame_n), im_n):
-			im_pairs.append((im_paths[idx], im_paths[idx + frame_n]))
-	else:
-		for idx in xrange(0, im_n - frame_n):
-			if idx + frame_n >= im_n:
-				continue
-			im_pairs.append((im_paths[idx], im_paths[idx + frame_n]))
+	# if frame_n < 0:
+	# 	for idx in xrange(abs(frame_n)):
+	# 		if idx + abs(frame_n) >= im_n:
+	# 			continue
+	# 		imgidxs2.append(imgidxs1[idx + abs(frame_n)])
+	# 		im_pairs.append((im_paths[idx], im_paths[idx + abs(frame_n)]))
 
-		for idx in xrange(im_n - frame_n, im_n):
-			im_pairs.append((im_paths[idx], im_paths[idx - frame_n]))
-	assert len(im_pairs) >= 1
+	# 	for idx in xrange(abs(frame_n), im_n):
+	# 		imgidxs2.append(imgidxs1[idx + frame_n])
+	# 		im_pairs.append((im_paths[idx], im_paths[idx + frame_n]))
+	# else:
+	# 	for idx in xrange(0, im_n - frame_n):
+	# 		if idx + frame_n >= im_n:
+	# 			continue
+	# 		imgidxs2.append(imgidxs1[idx + frame_n])
+	# 		im_pairs.append((im_paths[idx], im_paths[idx + frame_n]))
+
+	# 	for idx in xrange(im_n - frame_n, im_n):
+	# 		imgidxs2.append(imgidxs1[idx - frame_n])
+	# 		im_pairs.append((im_paths[idx], im_paths[idx - frame_n]))
+
+	for idx in xrange(im_n):
+		j = idx + frame_n
+		if j < 0 or j >= im_n:
+			j = idx - frame_n
+		imgidxs2.append(imgidxs1[j])
+		im_pairs.append((im_paths[idx], im_paths[j]))
+
+	assert len(im_pairs) >= im_n
+	assert len(im_pairs) == len(imgidxs2)
 
 	if is_disp:
 		print "\n\n---- Pairs ----\n"
-		for im_pair in im_pairs:
-			print im_pair
+		for idx in xrange(im_n):
+			imgidx2 = imgidxs2[idx]
+			im_pair = im_pairs[idx]
+			print imgidx2, "<-", im_pair
 		print "\n\n"
 
-	return im_pairs
+	return im_pairs, imgidxs2
 
 def _im_pairs_v2(im_first_paths, im_second_paths, is_disp=False):
 	assert len(im_first_paths) >= 1
@@ -164,7 +212,7 @@ def _im_pairs_v2(im_first_paths, im_second_paths, is_disp=False):
 	if is_disp:
 		print "\n\n---- Pairs ----\n"
 		for im_pair in im_pairs:
-			print im_pair
+			print "im pair:", im_pair
 		print "\n\n"
 
 	return im_pairs
@@ -227,6 +275,7 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 		im2 						= cv2.imread(im_path2)
 		h1, w1, _ 			= im1.shape
 		h2, w2, _ 			= im2.shape
+
 		im_tpath1 = out_dire + imgidx1 + "_tmp1" + "." + im_ext
 		im_tpath2 = out_dire + imgidx1 + "_tmp2" + "." + im_ext
 		print "im_path1:", im_path1
@@ -325,14 +374,21 @@ def _executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_op
 	print "\nDone\n"
 
 def _bboxes(bbox_file):
+	'''form (per line): `imgidx objidx x1 y1 x2 y2`'''
+	print "\n\nGetting bbox of person from `%s`.\n\n" % (bbox_file,)
 	if bbox_file is None:
 		return False, None
 	fh 		= open(bbox_file)
 	lines = fh.readlines()
 	fh.close()
 
+	disp_c = 0
+	bc     = {}
 	bboxes = {}
 	for line in lines:
+		disp_c += 1
+		if disp_c % disp_n == 0:
+			print "im_i:", disp_c
 		line = line.strip()
 		info = line.split()
 		imgidx, objidx, bbox = info[0], info[1], info[2:]
@@ -342,9 +398,15 @@ def _bboxes(bbox_file):
 			bboxes[imgidx] = bbox
 		else:
 			raise IOError(('\n\n{:s} has been in `bboxes` dictionary.\n\n').format(imgidx))
+	if disp_c % disp_n != 0:
+			print "im_i:", disp_c
+	print "\n\nGetting bbox of person done!\n\n"
+
 	return True, bboxes
 
-def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_file, df_options, cf_file, cf_options):
+def _executed_cmds_bbox_file(args, im_pairs, imgidxs1, imgidxs2, out_dire, \
+														 dm_file, dm_options, df_file, df_options, cf_file, \
+														 cf_options, im_ext=".jpg"):
 	''''''
 	t_time     = time.time()
 	im_n       = len(im_pairs)
@@ -369,20 +431,30 @@ def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_f
 	for im_i in xrange(im_n):
 		s_time   				= time.time()
 		im_pair 				= im_pairs[im_i]
+		imgidx1					= imgidxs1[im_i]
+		imgidx2 				= imgidxs2[im_i]
+		
 		im_path1        = im_pair[0] # main -> match
 		im_name1        = os.path.basename(im_path1)
-		imgidx1, im_ext = im_name1.rsplit(".", 1)
+
 		im_path2 				= im_pair[1] # auxi
 		im_name2        = os.path.basename(im_path2)
-		imgidx2, _      = im_name2.rsplit(".", 1)
+		# print "im_path1:", im_path1
+		# print "im_path2:", im_path2
 		im1 					  = cv2.imread(im_path1)
 		im2 						= cv2.imread(im_path2)
-		h1, w1, _ 			= im1.shape
-		h2, w2, _ 			= im2.shape
-		im_tpath1 = out_dire + imgidx1 + "_tmp1" + "." + im_ext
-		im_tpath2 = out_dire + imgidx1 + "_tmp2" + "." + im_ext
+		print
 		print "im_path1:", im_path1
 		print "im_path2:", im_path2
+		h1, w1, _ 			= im1.shape
+		h2, w2, _ 			= im2.shape
+
+		im_tpath1 = out_dire + imgidx1 + "_tmp1" + im_ext
+		im_tpath2 = out_dire + imgidx1 + "_tmp2" + im_ext
+		# print "im_tpath1:", im_tpath1
+		# print "im_tpath2:", im_tpath2
+		dire_ct   = os.path.dirname(im_tpath1)
+		_create_dire(dire_ct)
 		# ##############################################################
 		origin_eq       = False
 		mh, mw, mx, my  = None, None, None, None
@@ -396,10 +468,10 @@ def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_f
 			if has_bbox:
 				bbox1 = bboxes[imgidx1]
 				bbox2 = bboxes[imgidx2]
-				origin_im_path1 = origin_ims_dire + imgidx1 + "." + im_ext
-				origin_im_path2 = origin_ims_dire + imgidx2 + "." + im_ext
-				print "origin_im_path1:", origin_im_path1
-				print "origin_im_path2:", origin_im_path2
+				origin_im_path1 = origin_ims_dire + imgidx1 + im_ext
+				origin_im_path2 = origin_ims_dire + imgidx2 + im_ext
+				# print "origin_im_path1:", origin_im_path1
+				# print "origin_im_path2:", origin_im_path2
 				print 
 				origin_im1      = cv2.imread(origin_im_path1)
 				oh1, ow1, _     = origin_im1.shape
@@ -470,8 +542,8 @@ def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_f
 			of_h1, of_w1, _ = of_im1.shape
 			assert mh == of_h1
 			assert mw == of_w1
-			assert h1 <= of_h1
-			assert w1 <= of_w1
+			# assert h1 <= of_h1, "h1: %s, of_h1: %s" % (h1, of_h1)
+			# assert w1 <= of_w1, "w1: %s, of_w1: %s" % (w1, of_w1)
 			of_im2  = None
 			if origin_eq:
 				of_im2 = of_im1
@@ -485,8 +557,13 @@ def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_f
 			else:
 				of_im2	= of_im1[:h1, :w1]
 			of_h2, of_w2, _ = of_im2.shape
-			assert of_h2 == h1
-			assert of_w2 == w1
+			# assert of_h2 == h1
+			# assert of_w2 == w1
+			if of_h2 != h1 or of_w2 != w1:
+				of_im2 = cv2.resize(of_im2, (w1, h1), \
+														interpolation=cv2.INTER_LINEAR)
+				print "non-eq shape ->", "h1:", h1, "w1:", w1, \
+							"of_h2:", of_h2, "of_w2:", of_w2
 			cv2.imwrite(of_path2, of_im2)
 		# ##############################################################
 		if im_disp:
@@ -524,28 +601,30 @@ def _executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, df_f
 
 def flow_pipeline():
 	''''''
-	args 							= _parse_args()
+	args 										 = _parse_args()
 
-	frame_n 					= args.frame_n
+	frame_n 								 = args.frame_n
 
-	im_first_path 	  = args.im_first_path.strip()
+	im_first_path 	  			 = args.im_first_path.strip()
 
-	out_dire 					= args.out_dire.strip()
+	out_dire 								 = args.out_dire.strip()
 
-	is_disp						= True if args.is_disp != 0 else False
+	is_disp									 = True if args.is_disp != 0 else False
 
-	im_first_paths 		= _im_paths(im_first_path, is_disp)
+	im_first_paths, imgidxs1 = _im_paths(im_first_path, is_disp)
 
 	if args.im_second_path is None:
 		print "\nPair from sequence\n"
 		time.sleep(args.sleep_time)
-		im_pairs 			  = _im_pairs_v1(im_first_paths, frame_n, is_disp)
+		im_pairs, imgidxs2 = _im_pairs_v1(im_first_paths, frame_n, \
+																	    imgidxs1=imgidxs1, is_disp=is_disp)
 	else:
 		print "\nPair from directory or files or image\n"
 		time.sleep(args.sleep_time)
-		im_second_path  = args.im_second_path.strip()
-		im_second_paths = _im_paths(im_second_path, is_disp)
-		im_pairs        = _im_pairs_v2(im_first_paths, im_second_paths, is_disp)
+		im_second_path     				= args.im_second_path.strip()
+		im_second_paths, imgidxs2 = _im_paths(im_second_path, is_disp)
+		im_pairs         				  = _im_pairs_v2(im_first_paths, im_second_paths, \
+																						 is_disp)
 
 	dm_file, df_file, cf_file = _executed_files(args)
 
@@ -558,8 +637,9 @@ def flow_pipeline():
 		_executed_cmds(args, im_pairs, out_dire, dm_file, dm_options, \
 									 df_file, df_options, cf_file, cf_options)
 	elif cmd_choice == 1:
-		_executed_cmds_bbox_file(args, im_pairs, out_dire, dm_file, dm_options, \
-									 df_file, df_options, cf_file, cf_options)
+		_executed_cmds_bbox_file(args, im_pairs, imgidxs1, imgidxs2, out_dire, \
+									 					 dm_file, dm_options, df_file, df_options, \
+									 					 cf_file, cf_options)
 	else:
 		raise IOError(('\n\ninvalid cmd_choice: {:s}.\n\n').format(cmd_choice))
 
