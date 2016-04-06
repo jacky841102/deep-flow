@@ -6,9 +6,13 @@ root_dire="/home/ddk/dongdk/dataset/bbc_pose/"
 # im_second_path="${root_dire}labels/flo.labels/train_ims2_21w.label"
 # bbox_file="${root_dire}labels/flo.labels/pbbox_train_plus_21w.label"
 
-im_first_path="${root_dire}labels/flo.labels/val_ims1.label"
-im_second_path="${root_dire}labels/flo.labels/val_ims2.label"
-bbox_file="${root_dire}labels/flo.labels/pbbox_val_plus.label"
+# im_first_path="${root_dire}labels/flo.labels/val_ims1.label"
+# im_second_path="${root_dire}labels/flo.labels/val_ims2.label"
+# bbox_file="${root_dire}labels/flo.labels/pbbox_val_plus.label"
+
+im_first_path="${root_dire}labels/flo.labels/test_ims1.label"
+im_second_path="${root_dire}labels/flo.labels/test_ims2.label"
+bbox_file="${root_dire}labels/flo.labels/pbbox_test.label"
 
 out_dire="${root_dire}crop.data.flo/"
 mkdir -p $out_dire
