@@ -1,14 +1,20 @@
 #!/bin/sh
 
 # im dire
-root_dire="/home/ddk/dongdk/dataset/video.pose/FLIC.Motion-Ims-Src/"
-im_first_path="${root_dire}itself/"
-im_second_path="${root_dire}positive.2/"
+# root_dire="/home/ddk/dongdk/dataset/video.pose/FLIC.Motion-Ims-Src/"
+# im_first_path="${root_dire}itself/"
+# im_second_path="${root_dire}positive.2/"
+# out_dire="${root_dire}optical.flow/flic.pos.2/"
 
-out_dire="${root_dire}optical.flow/flic.pos.2/"
+
+root_dire="/home/ddk/download/pt.pose/tianshui/"
+# root_dire="/home/ddk/download/pt.pose/huanglili/"
+im_first_path="${root_dire}images/"
+out_dire="${root_dire}flo.viz/"
+
 mkdir -p $out_dire
 
-frame_n=2
+frame_n=-3
 
 dm_file="/home/ddk/dongdk/deep-matching/deep_matching/deep_matching_gpu.py"
 
@@ -43,6 +49,6 @@ python flow_pipeline.py \
 		--im_first_path $im_first_path \
 		--cf_options "" \
 		--df_options "-sintel " \
-		--dm_options "-form_type 1 -GPU -v --downscale 1 --ngh_rad 216 " \
+		--dm_options "-form_type 1 -GPU -v --downscale 1 --ngh_rad 256 " \
 		--sleep_time $sleep_time \
-		--im_second_path $im_second_path \
+		# --im_second_path $im_second_path \
